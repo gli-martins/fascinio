@@ -7,7 +7,7 @@ CXXFLAGS := -Wall -Wextra -pedantic -std=c++17 -I/usr/include/postgresql
 LDFLAGS = -L/usr/lib/x86_64-linux-gnu -lncurses -lpq -lpqxx -lboost_system -lboost_filesystem
 
 # Nome do executável
-TARGET := build/estudo
+TARGET := build/fascinio
 
 # Arquivos fonte
 SRC_DIR := src
