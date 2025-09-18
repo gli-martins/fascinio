@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
     int intDel = 0;
     bool bolFeito = false;
     string strBoost;
-    char strLogin[20];
+    //char strLogin[20];
     //char strPassword[50];
 
     double dblAltura = 0;
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 
 
     do {
-      //  clear();
+    
         // Hora atual
         ptime agora = second_clock::local_time();
         std::cout << " \nAgora: " << agora << std::endl;
@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
         cout << "\n=== MENU DE ACESSO ===" << endl;
         cout << "1. Adicionar item" << endl;
         cout << "2. Pesquisa por Nome" << endl;
-        cout << "3. Visualizar itens" << endl;
+        cout << "3. Alterar Item" << endl;
         cout << "4. Deletar item" << endl;
         cout << "5. Sair" << endl;
         cout << "Escolha uma opção (1-5): ";
