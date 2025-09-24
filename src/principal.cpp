@@ -1,14 +1,13 @@
 #include <iostream>
 #include <cstdlib>
 #include <ncurses.h>
+#include <ios>      // Para std::boolalpha e std::noboolalpha
 #include <vector>
 #include <string>
 #include <any>
 #include <limits>
 #include <iomanip>
-#include "/usr/include/postgresql/libpq-fe.h"
 #include "../include/Pessoa.hpp"
-#include "../include/PostgresDAO.hpp"
 #include <pqxx/pqxx>
 #include <stdlib.h> // Necessário para system()
 #include <fstream>
@@ -24,6 +23,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/nowide/iostream.hpp>
 #include <boost/nowide/cstdio.hpp>
+#include "../include/PostgreSQLDualConnection.hpp"
+#include "../include/SecretManager.hpp"  
+
 
 
 // g++ -std=c++17 -o meu_programa Select.cpp -I/usr/include/postgresql -lpq
@@ -34,14 +36,61 @@ using std::cin;
 using namespace boost::gregorian;
 using namespace boost::posix_time;
 
+#define VERSAO 0.1
 
 
 //Acessa String de Conexao ao Banco na Variavel de Ambiente
 //const char* env_var = std::getenv("PGSQL_SCA_URI");
 //std::string connection_string = env_var;
-std::string connection_string = "";
+//std::string connection_string = "";
 // Criar instância do DAO
-PostgresDAO dao(connection_string);
+//PostgresDAO dao(connection_string);
+
+    
+
+std::string secret(int db) {
+
+        SecretManager secret_manager("/etc/secrets/");
+        
+        // Carrega todos os secrets automaticamente
+        secret_manager.load_all_secrets();
+        
+        // Ou carrega específicos
+        // secret_manager.load_secret("db_password");
+        // secret_manager.load_secret("api_key");
+       // std::string db_name_sca = "";
+       // std::string db_name_reg = "";
+        std::string conectaDB = "";
+
+        // Acessa os valores
+        if (db == 1){
+        std::string db_name_sca = secret_manager.get_secret("db_name_sca");
+        std::string db_pass = secret_manager.get_secret("db_password");
+        std::string db_user = secret_manager.get_secret("db_user");
+        std::string db_host = secret_manager.get_secret("db_host");
+        conectaDB = "host="+db_host + " port=5432 dbname=" + db_name_sca + " user=" + db_user + " password="+db_pass;        
+        } else {
+        std::string db_name_reg = secret_manager.get_secret("db_name_reg");
+        std::string db_pass = secret_manager.get_secret("db_password");
+        std::string db_user = secret_manager.get_secret("db_user");
+        std::string db_host = secret_manager.get_secret("db_host");
+        conectaDB = "host="+db_host + " port=5432 dbname=" + db_name_reg + " user=" + db_user + " password="+db_pass;
+        }
+
+
+        return conectaDB;   
+}
+
+// Criar strings de conexão
+
+    // Verificar status das conexões
+    // dbConn.checkConnections();
+
+    std::string connStr1 = secret(1);
+    std::string connStr2 = secret(2);
+
+    // Criar instância da classe
+    PostgreSQLDualConnection dbDao(connStr1, connStr2, "Banco Principal", "Banco Secundário");
 
 
 // Função para exibir os argumentos
@@ -99,13 +148,10 @@ void cadastrar(string strNome, int intIdade, double dblAltura){
 
 int consultarUsuario(string param){
 
-    if (!dao.conectar()) {
-        std::cerr << "Falha na conexão: " << dao.getUltimoErro() << std::endl;
-        return 1;
-    }
-        clear();
+        dbDao.checkConnections();
+      //  clear();
         // Buscar todos os usuários
-        auto usuarios = dao.buscarUsuariosPorNome( param );
+        auto usuarios = dbDao.buscarUsuariosPorNome( param );
 
         std::cout << "Registros encontrados: " << usuarios.size() << std::endl;
         std::cout << std::string(160, '=') << std::endl;
@@ -132,6 +178,39 @@ int consultarUsuario(string param){
     return 0;
 }
 
+int consultarOrgao(string param){
+
+        dbDao.checkConnections();
+       // clear();
+        // Buscar Orgaos Vinculados
+        auto orgaos = dbDao.buscarOrgaoVinculado( param );
+
+        std::cout << "Registros encontrados: " << orgaos.size() << std::endl;
+        std::cout << std::string(160, '=') << std::endl;
+
+        std::cout << "│ " << std::left  
+        << std::setw(58) << "NOME"
+        << std::setw(20) << "| CNPJ"
+        << std::setw(40) << "| SIGLA"
+        << std::setw(32) << "| ATIVO"
+        << std::setw(5) << "| ID" << std::endl;
+        std::cout << std::string(160, '-') << std::endl;
+        if (orgaos.size() > 0){
+            std::cout << "│ " << std::left << std::setw(56)  <<  orgaos[0].getPessoaNome() << std::endl;
+        }
+        std::cout << std::string(160, '-') << std::endl;
+
+        for (size_t i = 0; i < orgaos.size(); ++i) {
+            std::cout << i+1 << ". " << std::setw(59) << orgaos[i].getNome().substr(0, 50)
+            << std::setw(20) << orgaos[i].getCnpj()
+            << std::setw(40) << orgaos[i].getSigla()
+            << std::setw(32) << std::boolalpha << orgaos[i].getAtivo() 
+            << std::setw(5) << orgaos[i].getId() << std::endl;
+        } 
+        std::cout << std::string(160, '-') << std::endl;
+
+    return 0;
+}
 
 int main(int argc, char* argv[]) {
 
@@ -139,7 +218,7 @@ int main(int argc, char* argv[]) {
     int intIdade = 0;
     int retorno = 0;
     int intDel = 0;
-    bool bolFeito = false;
+   // bool bolFeito = false;
     string strBoost;
     //char strLogin[20];
     //char strPassword[50];
@@ -147,6 +226,7 @@ int main(int argc, char* argv[]) {
     double dblAltura = 0;
     char strNome[80];
     string strArgumento;
+
 
     //Converter os argumentos para um vector de strings
     vector<string> argumentos(argv, argv + argc);
@@ -165,7 +245,6 @@ int main(int argc, char* argv[]) {
     }
 
 
-    do {
     
         // Hora atual
         ptime agora = second_clock::local_time();
@@ -195,12 +274,13 @@ int main(int argc, char* argv[]) {
         }
         */
 
-        opcao = 5; 
-
+        opcao = 0; 
+        do {
+        cout << "\n... Versao: " << VERSAO << endl;
         cout << "\n=== MENU DE ACESSO ===" << endl;
         cout << "1. Adicionar item" << endl;
         cout << "2. Pesquisa por Nome" << endl;
-        cout << "3. Alterar Item" << endl;
+        cout << "3. Pesquisar por ID" << endl;
         cout << "4. Deletar item" << endl;
         cout << "5. Sair" << endl;
         cout << "Escolha uma opção (1-5): ";
@@ -239,34 +319,29 @@ int main(int argc, char* argv[]) {
                 }
                 break;
             case 3:
-                cout << "Lista de itens:" << endl;
-                intIdade = consultarUsuario("GL");
-                    
+                cout << "Pesquisar por ID" << endl;
+                cout << "Digite o ID : ";
+                cin.getline( strNome, 10);
+                strBoost = strNome;
+
+                boost::trim(strBoost);
+
+                retorno = consultarOrgao(strBoost);
                 break;
             case 4:
                 cout << "Digite o ID para Excluir:" << endl;
                 cin >> intDel;
-                bolFeito = dao.estaConectado();
-
-                if (!bolFeito) {
-                    if (!dao.conectar()) {
-                        std::cerr << "Falha na conexão: " << dao.getUltimoErro() << std::endl;
+                
+                if (!dbDao.isConnection1Open()) {
+                        std::cerr << "Falha na conexão: " << std::endl;
                         return 1;
-                    }
                 }
                 
-                bolFeito = dao.deletarUsuario(intDel);
-                if (bolFeito) {
-                    cout << "Excluido com Sucesso!" << endl;
-                }else{
-                    cout << "ID nao Encontrado!" << endl;
-                }
                 cin.get();
                 break;
 
             case 5:
                 cout << "Saindo..." << endl;
-                dao.desconectar();
                 break;
             default:
                 cout << "Opção deve ser entre 1 e 4!" << endl;

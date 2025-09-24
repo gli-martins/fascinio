@@ -19,9 +19,7 @@ using std::cin;
     }
 
     void Pessoa::setNome(string pnome){
-        if (pnome.length() < 40){
             nome = pnome;
-        }
     }
     
     std::string Pessoa::getNome() {
