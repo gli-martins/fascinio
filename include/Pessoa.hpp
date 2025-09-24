@@ -13,7 +13,6 @@ using namespace std; // Usando o namespace std
 // Declaração de classe PESSOA
 class Pessoa {
 private:
-
     int id;
     string nome;
     double altura;
@@ -25,7 +24,7 @@ protected:
 
 
 public:
-    Pessoa( string, int, double );
+    Pessoa(const string, int, double );
     Pessoa();
     void setNome(string);
     std::string getNome();
