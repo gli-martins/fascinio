@@ -18,6 +18,8 @@ using std::cin;
     Pessoa::Pessoa() {
     }
 
+    Pessoa::~Pessoa() {}
+
     void Pessoa::setNome(string pnome){
             nome = pnome;
     }

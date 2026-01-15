@@ -16,6 +16,9 @@ using std::cin;
     Orgao::Orgao() {
     }
 
+    Orgao::~Orgao(){}
+
+
     void Orgao::setNome(string pnome){
             nome = pnome;
     }
@@ -68,4 +71,12 @@ using std::cin;
 
     string Orgao::getPessoaNome(){
         return pessoa_nm;
+    }
+
+    void Orgao::setSiaf(string pcod_siaf){
+        cod_siaf = pcod_siaf;
+    }
+
+    string Orgao::getSiaf(){
+        return cod_siaf;
     }

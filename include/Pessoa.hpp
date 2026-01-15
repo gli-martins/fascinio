@@ -26,6 +26,7 @@ protected:
 public:
     Pessoa(const string, int, double );
     Pessoa();
+    ~Pessoa();
     void setNome(string);
     std::string getNome();
     void setId( int );

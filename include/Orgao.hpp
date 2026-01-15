@@ -19,6 +19,7 @@ private:
     string sigla;
     bool ativo;
     string pessoa_nm;
+    string cod_siaf;
 
 protected:
 
@@ -26,6 +27,7 @@ protected:
 public:
     Orgao(const int);
     Orgao();
+    ~Orgao();
     void setNome(string);
     std::string getNome();
     void setId( int );
@@ -38,6 +40,8 @@ public:
     void setAtivo(bool);
     void setPessoaNome(string);
     string getPessoaNome();
+    void setSiaf(string);
+    string getSiaf();
 
     std::string toString();
 };

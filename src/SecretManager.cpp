@@ -13,6 +13,9 @@ namespace fs = std::filesystem;
     std::string secrets_path;
 
     SecretManager::SecretManager(const std::string& path = "/run/secrets/") : secrets_path(path) {}
+
+    SecretManager::~SecretManager(){}
+
     
     void SecretManager::load_secret(const std::string& secret_name) {
         std::string full_path = secrets_path + secret_name;

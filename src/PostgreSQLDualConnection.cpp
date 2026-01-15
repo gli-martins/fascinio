@@ -4,6 +4,9 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <fstream>
+#include <string>
+#include <pqxx/pqxx>
 
 // Implementação do construtor
 PostgreSQLDualConnection::PostgreSQLDualConnection(const std::string& connStr1, 
@@ -203,6 +206,9 @@ std::vector<Pessoa> PostgreSQLDualConnection::buscarUsuariosPorNome(const std::s
             usuarios.push_back(mapearResultadoParaPessoa(row));
         }
 
+        // Exportar para arquivo
+        // exportResultSetToFile(result, "dados_postgresql.txt");
+
         return usuarios;
 
     } catch (const std::exception& e) {
@@ -217,8 +223,9 @@ std::vector<Orgao> PostgreSQLDualConnection::buscarOrgaoVinculado(const std::str
     
     try {
         const std::string query = "select woo.wre_org_codigo as id, woo.wre_org_nome as orgao_nm, woo.wre_org_cnpj as cnpj, woo.wre_org_sigla as sigla, "
-        " woo.wre_org_ativo as ativo, wrr.wre_sca_nome as pessoa_nm from wre_org_orgaos woo " 
-            " join wre_res_responsaveis wrr on woo.wre_org_codigo = wrr.wre_org_codigo"
+        " woo.wre_org_ativo as ativo, wrr.wre_sca_nome as pessoa_nm, wos.wre_cod_siaf as siaf from wre_org_orgaos woo " 
+            " join wre_res_responsaveis wrr on woo.wre_org_codigo = wrr.wre_org_codigo "
+            " join wre_org_siaf wos on wrr.wre_org_codigo = wos.wre_cod_org "
             " where wrr.wre_sca_id = $1;";
 
         std::string parametro_nome =  cod_sca;
@@ -238,6 +245,8 @@ std::vector<Orgao> PostgreSQLDualConnection::buscarOrgaoVinculado(const std::str
     }
 }
 
+
+
 Pessoa PostgreSQLDualConnection::mapearResultadoParaPessoa(const pqxx::row& row) {
     Pessoa pessoa;
     pessoa.setId(row["id"].as<int>());
@@ -252,10 +261,43 @@ Pessoa PostgreSQLDualConnection::mapearResultadoParaPessoa(const pqxx::row& row)
 Orgao PostgreSQLDualConnection::mapearResultadoParaOrgao(const pqxx::row& row) {
     Orgao orgao;
     orgao.setId(row["id"].as<int>());
+    orgao.setSiaf(row["siaf"].as<std::string>());
     orgao.setNome(row["orgao_nm"].as<std::string>());
     orgao.setCnpj(row["cnpj"].as<std::string>());
     orgao.setSigla(row["sigla"].as<std::string>());
     orgao.setAtivo( row["ativo"].as<bool>());
     orgao.setPessoaNome(row["pessoa_nm"].as<std::string>());
     return orgao;
+}
+
+
+void PostgreSQLDualConnection::exportResultSetToFile(pqxx::result& result, const std::string& filename) {
+    std::ofstream outputFile(filename);
+    
+    if (!outputFile.is_open()) {
+        std::cerr << "Erro ao abrir arquivo: " << filename << std::endl;
+        return;
+    }
+    
+    // Escrever cabeçalho com nomes das colunas
+    if (!result.empty()) {
+        auto columns = result.columns();
+        for (size_t i = 0; (i < static_cast<size_t>(columns)); i++) {
+            outputFile << result.column_name(i);
+            if (i < static_cast<size_t>(columns) - 1) outputFile << ",";
+        }
+        outputFile << std::endl;
+    }
+    
+    // Escrever dados
+    for (auto row : result) {
+        for (size_t i = 0; i < static_cast<size_t>(row.size()); i++) {
+            outputFile << row[i].c_str();
+            if (i < static_cast<size_t>(row.size()) - 1) outputFile << ",";
+        }
+        outputFile << std::endl;
+    }
+    
+    outputFile.close();
+    std::cout << "Dados exportados para: " << filename << std::endl;
 }

@@ -89,6 +89,8 @@ public:
      */
     void checkConnections() const;
 
+    void exportResultSetToFile(pqxx::result& result, const std::string& filename);
+
     /**
      * @brief Obtém a referência para a primeira conexão (uso avançado)
      * @return Referência para a conexão do primeiro banco
@@ -168,5 +170,6 @@ std::string createConnectionString(const std::string& host,
  * @return String de conexão formatada
  */
 std::string createConnectionString(const std::map<std::string, std::string>& options);
+
 
 #endif // POSTGRESQL_DUAL_CONNECTION_HPP

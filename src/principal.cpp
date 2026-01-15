@@ -36,7 +36,7 @@ using std::cin;
 using namespace boost::gregorian;
 using namespace boost::posix_time;
 
-#define VERSAO 0.1
+#define VERSAO "0.1"
 
 
 //Acessa String de Conexao ao Banco na Variavel de Ambiente
@@ -76,8 +76,6 @@ std::string secret(int db) {
         std::string db_host = secret_manager.get_secret("db_host");
         conectaDB = "host="+db_host + " port=5432 dbname=" + db_name_reg + " user=" + db_user + " password="+db_pass;
         }
-
-
         return conectaDB;   
 }
 
@@ -88,6 +86,10 @@ std::string secret(int db) {
 
     std::string connStr1 = secret(1);
     std::string connStr2 = secret(2);
+    //const char* env_var = std::getenv("PGSQL_SCA_URI");
+    //std::string connection_string = env_var;
+    //std::string connStr1 = connection_string;
+
 
     // Criar instância da classe
     PostgreSQLDualConnection dbDao(connStr1, connStr2, "Banco Principal", "Banco Secundário");
@@ -158,22 +160,21 @@ int consultarUsuario(string param){
 
         std::cout << "│ " << std::left  
         << std::setw(58) << "NOME"
+        << std::setw(5) << "| ID"
         << std::setw(20) << "| CPF"
         << std::setw(40) << "| E-Mail"
-        << std::setw(32) << "| LOGIN"
-        << std::setw(5) << "| ID" << std::endl;
+        << std::setw(32) << "| LOGIN" << std::endl;
         std::cout << std::string(160, '-') << std::endl;
 
         for (size_t i = 0; i < usuarios.size(); ++i) {
-            std::cout << i+1 << ". " << std::setw(57) << usuarios[i].getNome() 
+            std::cout << i+1 << ". " << std::setw(58) << usuarios[i].getNome() 
+            << std::setw(5) << usuarios[i].getId() 
             << std::setw(20) << usuarios[i].getCpf()
             << std::setw(40) << usuarios[i].getEmail()
-            << std::setw(32) << usuarios[i].getLogin() 
-            << std::setw(5) << usuarios[i].getId() << std::endl;
+            << std::setw(32) << usuarios[i].getLogin() << std::endl;
         }
 
         std::cout << std::string(160, '-') << std::endl;
-       // dao.desconectar();
 
     return 0;
 }
@@ -186,44 +187,42 @@ int consultarOrgao(string param){
         auto orgaos = dbDao.buscarOrgaoVinculado( param );
 
         std::cout << "Registros encontrados: " << orgaos.size() << std::endl;
-        std::cout << std::string(160, '=') << std::endl;
+        std::cout << std::string(170, '=') << std::endl;
 
         std::cout << "│ " << std::left  
         << std::setw(58) << "NOME"
+        << std::setw(10) << "| Cod. SIAF"
         << std::setw(20) << "| CNPJ"
         << std::setw(40) << "| SIGLA"
         << std::setw(32) << "| ATIVO"
         << std::setw(5) << "| ID" << std::endl;
-        std::cout << std::string(160, '-') << std::endl;
+        std::cout << std::string(170, '-') << std::endl;
         if (orgaos.size() > 0){
-            std::cout << "│ " << std::left << std::setw(56)  <<  orgaos[0].getPessoaNome() << std::endl;
+            std::cout << "│ " << std::left << std::setw(59)  <<  orgaos[0].getPessoaNome() << std::endl;
         }
-        std::cout << std::string(160, '-') << std::endl;
+        std::cout << std::string(170, '-') << std::endl;
 
         for (size_t i = 0; i < orgaos.size(); ++i) {
-            std::cout << i+1 << ". " << std::setw(59) << orgaos[i].getNome().substr(0, 50)
+            std::cout << i+1 << ". " << std::setw(60) << orgaos[i].getNome().substr(0, 50)
+            << std::setw(10) << orgaos[i].getSiaf()
             << std::setw(20) << orgaos[i].getCnpj()
             << std::setw(40) << orgaos[i].getSigla()
             << std::setw(32) << std::boolalpha << orgaos[i].getAtivo() 
             << std::setw(5) << orgaos[i].getId() << std::endl;
         } 
-        std::cout << std::string(160, '-') << std::endl;
+        std::cout << std::string(170, '-') << std::endl;
 
     return 0;
 }
 
 int main(int argc, char* argv[]) {
 
+
+
     int opcao = 0;
-    int intIdade = 0;
     int retorno = 0;
-    int intDel = 0;
    // bool bolFeito = false;
     string strBoost;
-    //char strLogin[20];
-    //char strPassword[50];
-
-    double dblAltura = 0;
     char strNome[80];
     string strArgumento;
 
@@ -275,13 +274,13 @@ int main(int argc, char* argv[]) {
         */
 
         opcao = 0; 
+        system("clear");
+
         do {
         cout << "\n... Versao: " << VERSAO << endl;
-        cout << "\n=== MENU DE ACESSO ===" << endl;
-        cout << "1. Adicionar item" << endl;
-        cout << "2. Pesquisa por Nome" << endl;
-        cout << "3. Pesquisar por ID" << endl;
-        cout << "4. Deletar item" << endl;
+        cout << "=== MENU DE ACESSO ===" << endl;
+        cout << "1. Pesquisa por Nome" << endl;
+        cout << "2. Pesquisar por ID" << endl;
         cout << "5. Sair" << endl;
         cout << "Escolha uma opção (1-5): ";
         
@@ -294,18 +293,6 @@ int main(int argc, char* argv[]) {
 
             switch(opcao) {
             case 1:
-                    cout << "Digite seu nome: " << endl;
-                    cin.getline( strNome, 80);
-                    cout << "Digite sua Idade : " << endl;
-                    cin >> intIdade;
-                    cout << "Digite sua Altura: " << endl;
-                    cin >> dblAltura;
-                    cadastrar(strNome, intIdade, dblAltura);
-                    cout << "Item adicionado com sucesso!" << endl;
-                    cin.get();
-
-                break;
-            case 2:
                 cout << "Pesquisar por: ";
                 cin.getline( strNome, 10);
                 strBoost = strNome;
@@ -318,43 +305,32 @@ int main(int argc, char* argv[]) {
                     cout << "Houve ERRO na pesquisa." << endl;
                 }
                 break;
-            case 3:
+            case 2:
                 cout << "Pesquisar por ID" << endl;
                 cout << "Digite o ID : ";
                 cin.getline( strNome, 10);
                 strBoost = strNome;
-
                 boost::trim(strBoost);
-
                 retorno = consultarOrgao(strBoost);
-                break;
-            case 4:
-                cout << "Digite o ID para Excluir:" << endl;
-                cin >> intDel;
-                
-                if (!dbDao.isConnection1Open()) {
-                        std::cerr << "Falha na conexão: " << std::endl;
-                        return 1;
-                }
-                
-                cin.get();
                 break;
 
             case 5:
                 cout << "Saindo..." << endl;
                 break;
             default:
-                cout << "Opção deve ser entre 1 e 4!" << endl;
+                cout << "Opção incorreta!" << endl;
         }
-        
+        /**
         if(opcao != 5) {
             cout << "\nPressione Enter para continuar...";
             cin.get();
             system("clear");
         }
-        
+        */
+    
     } while(opcao != 5);
-    clear();
+    system("clear");
+    //clear();
     
 }
  

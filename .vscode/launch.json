@@ -10,7 +10,7 @@
         "request": "launch",
         "program": "${workspaceFolder}/build/fascinio",
         "args": [],
-        "stopAtEntry": false,
+        "stopAtEntry": true,
         "cwd": "${fileDirname}",
         "environment": [],
         "externalConsole": false,

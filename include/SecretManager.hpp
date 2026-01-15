@@ -15,6 +15,9 @@ private:
 
 public:
     SecretManager(const std::string& path);
+    ~SecretManager();
+
+
     void load_secret(const std::string& secret_name);
     void load_all_secrets();
     std::string get_secret(const std::string& secret_name);
